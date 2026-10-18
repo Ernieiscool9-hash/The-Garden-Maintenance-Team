@@ -1,18 +1,16 @@
 import React, { useState } from 'react';
-import { WorkGalleryItem, ServiceCategory } from '../types/gardening';
+import { WorkGalleryItem } from '../types/gardening';
 import {
   Sparkles,
-  MapPin,
   Calendar,
   User,
   Plus,
   Phone,
-  ArrowRight,
-  Filter,
   Search,
   Eye,
   CheckCircle2,
-  Trash2
+  Trash2,
+  ImageIcon
 } from 'lucide-react';
 import { AddPicModal } from './AddPicModal';
 
@@ -35,29 +33,17 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
   supportPhone = '+44 20 7946 0912',
   businessName = 'Verdant'
 }) => {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddPicModalOpen, setIsAddPicModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WorkGalleryItem | null>(null);
 
-  const categories = [
-    { id: 'all', label: 'All Work' },
-    { id: 'lawn', label: 'Lawn Care' },
-    { id: 'hedge', label: 'Hedge Trimming' },
-    { id: 'clearance', label: 'Clearance' },
-    { id: 'planting', label: 'Planting & Mulch' },
-    { id: 'trees', label: 'Tree Pruning' },
-    { id: 'transformation', label: 'Transformations' },
-  ];
-
   const filteredItems = galleryItems.filter((item) => {
-    const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-    const matchesSearch =
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.gardenerName && item.gardenerName.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.title.toLowerCase().includes(query) ||
+      (item.gardenerName && item.gardenerName.toLowerCase().includes(query))
+    );
   });
 
   return (
@@ -68,14 +54,13 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-800 tracking-wider uppercase mb-1.5">
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Portfolio & Real Work</span>
+              <span>Real Work Portfolio</span>
             </div>
             <h1 className="text-3xl sm:text-5xl font-serif text-stone-900 font-bold mb-3 tracking-tight">
               See Our Work
             </h1>
             <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-              Explore real garden care and transformations completed by our local gardeners.
-              From razor-sharp lawn edges and level hedges to full garden revivals.
+              Explore real results completed by our gardening team. High-resolution photos from recent client visits.
             </p>
           </div>
 
@@ -103,24 +88,11 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
           </div>
         </div>
 
-        {/* Filter Bar & Search */}
+        {/* Gallery Controls (Search & Count) */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          {/* Categories */}
-          <div className="flex flex-wrap items-center gap-2">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-                  activeCategory === cat.id
-                    ? 'bg-emerald-800 text-white shadow-xs'
-                    : 'bg-white text-stone-700 hover:bg-stone-100 border border-stone-200'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 text-xs font-medium text-stone-500">
+            <ImageIcon className="w-4 h-4 text-emerald-700" />
+            <span>Showing <strong>{filteredItems.length}</strong> photo{filteredItems.length === 1 ? '' : 's'}</span>
           </div>
 
           {/* Search box */}
@@ -130,7 +102,7 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by area or job type..."
+              placeholder="Search gallery..."
               className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-stone-300 bg-white text-stone-900 focus:outline-none focus:border-emerald-700"
             />
           </div>
@@ -145,7 +117,7 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
             <div>
               <h3 className="font-serif font-bold text-stone-900 text-lg">No pictures found</h3>
               <p className="text-xs text-stone-500 mt-1">
-                Try selecting "All Work" or clearing your search.
+                Try clearing your search query.
               </p>
             </div>
             {isAdmin && onAddPic && (
@@ -181,13 +153,8 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-stone-950/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                     <span className="text-white text-xs font-semibold flex items-center gap-1.5">
                       <Eye className="w-3.5 h-3.5" />
-                      <span>Click to view details</span>
+                      <span>Click to enlarge photo</span>
                     </span>
-                  </div>
-
-                  {/* Category Pill */}
-                  <div className="absolute top-3 left-3 bg-stone-900/80 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    {item.category}
                   </div>
 
                   {/* Admin delete button */}
@@ -208,30 +175,24 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
                   )}
                 </div>
 
-                {/* Card details */}
+                {/* Card details - Clean without service category, location, or description */}
                 <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center gap-1.5 text-xs text-emerald-800 font-semibold mb-1.5">
-                      <MapPin className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
-                      <span>{item.location}</span>
-                    </div>
-
-                    <h3 className="font-serif font-bold text-stone-900 text-lg mb-2 group-hover:text-emerald-900 transition-colors">
+                    <h3 className="font-serif font-bold text-stone-900 text-lg group-hover:text-emerald-900 transition-colors">
                       {item.title}
                     </h3>
-
-                    <p className="text-xs text-stone-600 leading-relaxed mb-4 line-clamp-2">
-                      {item.description}
-                    </p>
                   </div>
 
-                  <div className="pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
+                  <div className="pt-3 mt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
                     <div className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-stone-400" />
                       <span>{item.gardenerName || 'Verdant Team'}</span>
                     </div>
                     {item.completedDate && (
-                      <span>{item.completedDate}</span>
+                      <span className="flex items-center gap-1 text-stone-400">
+                        <Calendar className="w-3 h-3" />
+                        <span>{item.completedDate}</span>
+                      </span>
                     )}
                   </div>
                 </div>
@@ -275,7 +236,7 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
         </div>
       </div>
 
-      {/* Picture Details Lightbox Modal */}
+      {/* Picture Details Lightbox Modal - Clean photo viewer */}
       {selectedItem && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/80 backdrop-blur-md overflow-y-auto"
@@ -298,25 +259,14 @@ export const OurWorkView: React.FC<OurWorkViewProps> = ({
               >
                 ✕
               </button>
-              <div className="absolute bottom-4 left-4 bg-stone-900/80 backdrop-blur-md text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                {selectedItem.category}
-              </div>
             </div>
 
             <div className="p-6 sm:p-8 space-y-4">
               <div>
-                <div className="flex items-center gap-2 text-xs text-emerald-800 font-bold mb-1">
-                  <MapPin className="w-4 h-4 text-emerald-600" />
-                  <span>{selectedItem.location}</span>
-                </div>
                 <h3 className="text-2xl font-serif font-bold text-stone-900">
                   {selectedItem.title}
                 </h3>
               </div>
-
-              <p className="text-sm text-stone-600 leading-relaxed">
-                {selectedItem.description}
-              </p>
 
               <div className="flex items-center justify-between text-xs text-stone-500 pt-3 border-t border-stone-200">
                 <div className="flex items-center gap-1.5">
